@@ -17,10 +17,4 @@ public final class BinaryResourceProviderFactory {
     try provider.loadContents(from: directory)
     return provider
   }
-
-  // MARK: -
-
-  private init() {
-    // Private because it really does not make sense to create instances (all methods are static)
-  }
 }

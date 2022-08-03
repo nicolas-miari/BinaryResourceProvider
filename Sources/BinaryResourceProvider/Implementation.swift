@@ -1,12 +1,17 @@
 import Foundation
 import AppKit     // for CGImage and NSBitmapImageRep
+import ImageUtils
 
 internal class BinaryResourceProviderImplementation: BinaryResourceProvider {
 
   // MARK: - BinaryResourceProvider Interface
 
   func directoryWrapper() -> FileWrapper {
-    return FileWrapper(directoryWithFileWrappers: [:])
+    let fileWrappers: [String: FileWrapper] = cache.compactMapValues { image in
+      guard let data = try? image.pngData() else { return nil }
+      return FileWrapper(regularFileWithContents: data)
+    }
+    return FileWrapper(directoryWithFileWrappers: fileWrappers)
   }
 
   func add(_ image: CGImage) -> String {

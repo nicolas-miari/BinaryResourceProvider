@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "imageutils",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicolas-miari/ImageUtils.git",
+      "state" : {
+        "revision" : "c3e175675fb5f0addc1bcc354dc5a3304efd3e07",
+        "version" : "0.0.1"
+      }
+    }
+  ],
+  "version" : 2
+}
