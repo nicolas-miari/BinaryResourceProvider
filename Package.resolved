@@ -8,6 +8,15 @@
         "revision" : "c3e175675fb5f0addc1bcc354dc5a3304efd3e07",
         "version" : "0.0.1"
       }
+    },
+    {
+      "identity" : "uniqueidentifierprovider",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicolas-miari/UniqueIdentifierProvider.git",
+      "state" : {
+        "revision" : "d6c5870409ec2a4cf3dfb0f5debd08845e9dedf1",
+        "version" : "0.0.3"
+      }
     }
   ],
   "version" : 2

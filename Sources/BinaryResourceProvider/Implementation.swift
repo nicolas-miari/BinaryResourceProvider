@@ -1,16 +1,30 @@
 import Foundation
 import AppKit     // for CGImage and NSBitmapImageRep
 import ImageUtils
+import UniqueIdentifierProvider
 
 internal class BinaryResourceProviderImplementation: BinaryResourceProvider {
 
+  private let identifierProvider: UniqueIdentifierProvider
+
+  private let identifierProviderFileName = "IdentifierProvider"
+
+  internal init(identifierProvider: UniqueIdentifierProvider) {
+    self.identifierProvider = identifierProvider
+  }
+
   // MARK: - BinaryResourceProvider Interface
 
-  func directoryWrapper() -> FileWrapper {
-    let fileWrappers: [String: FileWrapper] = cache.compactMapValues { image in
-      guard let data = try? image.pngData() else { return nil }
+  func directoryWrapper() throws -> FileWrapper {
+    // Wrap each resource into a file
+    var fileWrappers: [String: FileWrapper] = try cache.compactMapValues { image in
+      let data = try image.pngData()
       return FileWrapper(regularFileWithContents: data)
     }
+    // Wrap the identifier provder too:
+    let idProviderFileWrapper = try identifierProvider.fileWrapper()
+    fileWrappers[identifierProviderFileName] = idProviderFileWrapper
+
     return FileWrapper(directoryWithFileWrappers: fileWrappers)
   }
 
@@ -29,12 +43,20 @@ internal class BinaryResourceProviderImplementation: BinaryResourceProvider {
 
   // MARK: - Internal Interface
 
-  internal func loadContents(from directory: FileWrapper) throws {
-    guard let children = directory.fileWrappers else {
-      return
+  /// Restores an instance from disk.
+  internal init(from directory: FileWrapper) throws {
+    guard var children = directory.fileWrappers else {
+      throw BinaryResourceError.dataCorrupted
     }
 
-    try children.forEach { identifier, file in
+    // Recover the ID provider
+    guard let providerFile = children.removeValue(forKey: identifierProviderFileName) else {
+      throw BinaryResourceError.dataCorrupted
+    }
+    self.identifierProvider = try UniqueIdentifierProviderFactory.loadIdentifierProvider(from: providerFile)
+
+    // Recover the binary resource cache
+    self.cache = try children.mapValues { file in
       guard let data = file.regularFileContents else {
         throw BinaryResourceError.dataCorrupted
       }
@@ -44,7 +66,7 @@ internal class BinaryResourceProviderImplementation: BinaryResourceProvider {
       guard let image = bitmapRep.cgImage else {
         throw BinaryResourceError.dataCorrupted
       }
-      cache[identifier] = image
+      return image
     }
   }
 

@@ -2,6 +2,7 @@ import XCTest
 import CoreImage
 import CoreGraphics
 import ImageUtils
+import UniqueIdentifierProvider
 
 @testable import BinaryResourceProvider
 
@@ -19,45 +20,31 @@ final class BinaryResourceProviderTests: XCTestCase {
     XCTAssertIdentical(image, try provider.image(identifier: identifier))
   }
 
-  func testLoadFromFileWrapper() throws {
-    // GIVEN
-    let image = try CGImage.createSolid(size: CGSize(width: 20, height: 20), color: CGColor.white)
-    let data = try image.pngData()
-    let identifier = UUID().uuidString
-    let file = FileWrapper(regularFileWithContents: data)
-    let directory = FileWrapper(directoryWithFileWrappers: [identifier: file])
-
-    // WHEN
-    let provider = try BinaryResourceProviderFactory.loadResourceProvider(from: directory)
-
-    // THEN
-    let retrievedImage = try provider.image(identifier: identifier)
-    XCTAssertEqual(retrievedImage.width, image.width)
-    XCTAssertEqual(retrievedImage.height, image.height)
-    XCTAssertEqual(try retrievedImage.pngData(), data)
-  }
-
   func testImageNotFound() {
     // GIVEN
-    let provider = BinaryResourceProviderFactory.newResourceProvider()
+    let provider = BinaryResourceProviderFactory.newResourceProvider(
+      identifierProvider: UniqueIdentifierProviderFactory.newIdentifierProvider())
 
     // THEN
     XCTAssertThrowsError(try provider.image(identifier: "ABCDEF"))
   }
 
-  func testLoadEmptyDirectory() throws {
+  func testLoadEmptyDirectoryFails() throws {
+    // GIVEN
     let directory = FileWrapper(directoryWithFileWrappers: [:])
-    _ = try BinaryResourceProviderFactory.loadResourceProvider(from: directory)
+
+    // THEN
+    XCTAssertThrowsError(try BinaryResourceProviderFactory.loadResourceProvider(from: directory))
   }
 
-  func testRecoverFromDirectory() throws {
+  func testRecoverFromDirectoryPreservesContents() throws {
     // GIVEN
     let provider = BinaryResourceProviderFactory.newResourceProvider()
     let image = try CGImage.createSolid(size: CGSize(width: 20, height: 20), color: CGColor.white)
     let identifier = provider.add(image)
 
     // WHEN
-    let directory = provider.directoryWrapper()
+    let directory = try provider.directoryWrapper()
     let restoredProvider = try BinaryResourceProviderFactory.loadResourceProvider(from: directory)
 
     // THEN

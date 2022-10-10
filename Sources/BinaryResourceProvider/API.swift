@@ -10,11 +10,11 @@ public protocol BinaryResourceProvider {
    The resource provider can later be faithfully restored by calling the factory method
    `loadResourceProvider(from:)` and passing the same directory wrapper returned here.
    */
-  func directoryWrapper() -> FileWrapper
+  func directoryWrapper() throws -> FileWrapper
 
   /**
    Caches the passed image data and returns a unique identifier that can later be used to retrieve
-   it
+   it.
    */
   func add(_ image: CGImage) -> String
 
@@ -28,6 +28,10 @@ public protocol BinaryResourceProvider {
 // MARK: - Supporting Types
 
 public enum BinaryResourceError: LocalizedError {
+
+  /// A resource matching the specified identifier could not be found in the cache.
   case resourceNotFound
+
+  /// A resource could not be recovered from storage because the data was corrupted.
   case dataCorrupted
 }
